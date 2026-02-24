@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Controle de Trabalho</title>
+    <style>
+        :root { --primary: #2b5797; --success: #107c10; --bg: #f3f2f1; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { color: var(--primary); text-align: center; }
+        .field { margin-bottom: 15px; }
+        label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        #status { margin-top: 15px; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📝 Registro de Fluxo</h2>
+    
+    <div class="field">
+        <label>Data</label>
+        <input type="date" id="data">
+    </div>
+
+    <div class="field">
+        <label>Tipo</label>
+        <select id="tipo">
+            <option value="Entrada">💰 Entrada</option>
+            <option value="Saída">📉 Saída</option>
+        </select>
+    </div>
+
+    <div class="field">
+        <label>Descrição</label>
+        <input type="text" id="descricao" placeholder="O que aconteceu?">
+    </div>
+
+    <div class="field">
+        <label>Valor (R$)</label>
+        <input type="number" id="valor" step="0.01" placeholder="0,00">
+    </div>
+
+    <button class="btn" id="btnSalvar" onclick="enviar()">Salvar na Planilha</button>
+    <div id="status"></div>
+</div>
+
+<script>
+    // SEU LINK OFICIAL JÁ CONFIGURADO ABAIXO:
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxmm76H-36oCnDcEeWd8ZA2Tibb-_QoszTIJn2CuBi4ruqDJiAmyn2BR4koe2RkGLgGNA/exec";
+
+    async function enviar() {
+        const btn = document.getElementById('btnSalvar');
+        const status = document.getElementById('status');
+        
+        const dados = {
+            data: document.getElementById('data').value,
+            tipo: document.getElementById('tipo').value,
+            descricao: document.getElementById('descricao').value,
+            valor: document.getElementById('valor').value
+        };
+
+        if (!dados.data || !dados.valor) {
+            status.innerText = "❌ Preencha data e valor!";
+            status.style.display = "block";
+            status.style.background = "#fde7e9";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Enviando...";
+
+        try {
+            // Usando no-cors para evitar bloqueios de navegador, 
+            // já que o Apps Script recebe bem o POST direto
+            await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            status.innerText = "✅ Salvo com sucesso!";
+            status.style.display = "block";
+            status.style.background = "#dff6dd";
+            document.getElementById('descricao').value = "";
+            document.getElementById('valor').value = "";
+            
+        } catch (error) {
+            status.innerText = "❌ Erro ao enviar.";
+            status.style.display = "block";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Salvar na Planilha";
+        }
+    }
+
+    document.getElementById('data').valueAsDate = new Date();
+</script>
+
+</body>
+</html>

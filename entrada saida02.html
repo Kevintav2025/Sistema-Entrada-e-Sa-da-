@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Trabalho - Pessoa 02</title>
+    <style>
+        :root { 
+            --primary: #7b2b97; /* Cor Roxa para diferenciar do primeiro */
+            --success: #107c10; 
+            --bg: #f3f2f1; 
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border-top: 5px solid var(--primary); }
+        h2 { color: var(--primary); text-align: center; margin-top: 0; margin-bottom: 5px; }
+        .user-badge { text-align: center; font-size: 11px; color: #888; margin-bottom: 20px; font-weight: bold; text-transform: uppercase; }
+        .field { margin-bottom: 15px; }
+        label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #333; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px rgba(123, 43, 151, 0.2); }
+        .btn { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        .btn:hover { background: #0b5e0b; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        #status { margin-top: 15px; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="user-badge">Painel de Lançamentos</div>
+    <h2>Pessoa 02</h2>
+    
+    <div class="field">
+        <label>Data</label>
+        <input type="date" id="data">
+    </div>
+
+    <div class="field">
+        <label>Tipo de Operação</label>
+        <select id="tipo">
+            <option value="Entrada">💰 Entrada (Ganho)</option>
+            <option value="Saída">📉 Saída (Gasto)</option>
+        </select>
+    </div>
+
+    <div class="field">
+        <label>Descrição</label>
+        <input type="text" id="descricao" placeholder="Ex: Venda de serviço">
+    </div>
+
+    <div class="field">
+        <label>Valor (R$)</label>
+        <input type="number" id="valor" step="0.01" placeholder="0,00">
+    </div>
+
+    <button class="btn" id="btnSalvar" onclick="enviar()">Salvar na Planilha 02</button>
+    <div id="status"></div>
+</div>
+
+<script>
+    // LINK DA SEGUNDA PLANILHA QUE VOCÊ ENVIOU:
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzfolu8nx6kHzz3jYpogjMootPsbLskWXYw1EOzJ7XnIvYRuKalsoQFW9wPCXngAUCdww/exec";
+
+    async function enviar() {
+        const btn = document.getElementById('btnSalvar');
+        const status = document.getElementById('status');
+        
+        const dados = {
+            data: document.getElementById('data').value,
+            tipo: document.getElementById('tipo').value,
+            descricao: document.getElementById('descricao').value,
+            valor: document.getElementById('valor').value
+        };
+
+        // Validação simples
+        if (!dados.data || !dados.valor) {
+            mostrarMensagem("⚠️ Preencha a data e o valor!", "#fde7e9", "#d83b01");
+            return;
+        }
+
+        // Estado de carregamento
+        btn.disabled = true;
+        btn.innerText = "Enviando dados...";
+        status.style.display = "none";
+
+        try {
+            // Enviando para o Google Sheets
+            await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            // Sucesso (Como usamos no-cors, o fetch não "sabe" se deu erro, então assumimos o envio)
+            mostrarMensagem("✅ Registrado com Sucesso!", "#dff6dd", "#107c10");
+            
+            // Limpa apenas descrição e valor para o próximo lançamento
+            document.getElementById('descricao').value = "";
+            document.getElementById('valor').value = "";
+            
+        } catch (error) {
+            mostrarMensagem("❌ Erro de conexão.", "#fde7e9", "#d83b01");
+            console.error(error);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Salvar na Planilha 02";
+        }
+    }
+
+    function mostrarMensagem(texto, fundo, cor) {
+        const status = document.getElementById('status');
+        status.innerText = texto;
+        status.style.display = "block";
+        status.style.background = fundo;
+        status.style.color = cor;
+    }
+
+    // Coloca a data de hoje automaticamente ao abrir a página
+    document.getElementById('data').valueAsDate = new Date();
+</script>
+
+</body>
+</html>
